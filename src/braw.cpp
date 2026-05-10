@@ -117,7 +117,8 @@ Braw::Braw()
 
 Braw::~Braw()
 {
-	codec->FlushJobs();
+	if (codec != nullptr)
+		codec->FlushJobs();
 
 	if (clip != nullptr)
 		clip->Release();
@@ -135,10 +136,20 @@ void Braw::openFile(std::string filepath)
 	info->filename = filepath;
 
 	// Setup BRAW SDK
+#ifdef __APPLE__
+	factory = CreateBlackmagicRawFactoryInstanceFromExeRelativePath(CFSTR("Libraries"));
+#else
 	factory = CreateBlackmagicRawFactoryInstanceFromPath(lib);
+#endif
 	factory->CreateCodec(&codec);
+#ifdef __APPLE__
+	CFStringRef c = CFStringCreateWithCString(nullptr, info->filename.c_str(), kCFStringEncodingUTF8);
+	codec->OpenClip(c, &clip);
+	CFRelease(c);
+#else
 	const char *c = info->filename.c_str();
 	codec->OpenClip(c, &clip);
+#endif
 	codec->SetCallback(&frameProcessor);
 
 	clip->GetFrameCount(&(info->frameCount));

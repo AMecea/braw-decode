@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 	if(files.size() == 1)
 	{
 		braw_decoder.openFile(files[0]);
+	}else if(files.size() == 0){
+		std::cerr << "No file provided" << std::endl;
 	}else{
 		std::cerr << "Too many files provided" << std::endl;
 		for(int i = 0; i != files.size(); ++i)

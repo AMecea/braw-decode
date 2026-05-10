@@ -3,6 +3,9 @@
 #define BRAW_H
 
 #include "BlackmagicRawAPI.h"
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
 
 #include "argparse.h"
 
@@ -22,7 +25,7 @@ struct BrawInfo
 	unsigned int width = 0;
 	unsigned int height = 0;
 	unsigned int scale = 1;
-	long unsigned int frameCount;
+	uint64_t frameCount;
 	unsigned int frameIndex = 0;
 	float framerate = 0;
 	std::string filename;
@@ -49,8 +52,13 @@ class FrameProcessor : public IBlackmagicRawCallback
 		virtual void DecodeComplete(IBlackmagicRawJob*, HRESULT) {}
 		virtual void TrimProgress(IBlackmagicRawJob*, float) {}
 		virtual void TrimComplete(IBlackmagicRawJob*, HRESULT) {}
+#ifdef __APPLE__
+		virtual void SidecarMetadataParseWarning(IBlackmagicRawClip*, CFStringRef, uint32_t, CFStringRef) {}
+		virtual void SidecarMetadataParseError(IBlackmagicRawClip*, CFStringRef, uint32_t, CFStringRef) {}
+#else
 		virtual void SidecarMetadataParseWarning(IBlackmagicRawClip*, const char*, uint32_t, const char*) {}
 		virtual void SidecarMetadataParseError(IBlackmagicRawClip*, const char*, uint32_t, const char*) {}
+#endif
 		virtual void PreparePipelineComplete(void*, HRESULT) {}
 
 		virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, LPVOID*)
@@ -110,7 +118,9 @@ class Braw
 		unsigned int frameOut;
 		
 		// BRAW SDK
+#ifndef __APPLE__
 		const char *lib = "Libraries/";
+#endif
 		int maxThreads = 4;
 		IBlackmagicRawFactory* factory = nullptr;
 		IBlackmagicRaw* codec = nullptr;
