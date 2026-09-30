@@ -195,6 +195,7 @@ bool ArgParse::checkArg(ARG arg, int iargs, bool action)
 			}
 		}
 	}
+	return false;
 }
 		
 std::vector<std::string> ArgParse::getArgsRemaining()

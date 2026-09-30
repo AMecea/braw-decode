@@ -141,15 +141,30 @@ void Braw::openFile(std::string filepath)
 #else
 	factory = CreateBlackmagicRawFactoryInstanceFromPath(lib);
 #endif
-	factory->CreateCodec(&codec);
+	if (factory == nullptr)
+	{
+		std::cerr << "Failed to load the Blackmagic RAW SDK (is Libraries/ next to the executable?)" << std::endl;
+		std::exit(1);
+	}
+	HRESULT openResult = factory->CreateCodec(&codec);
+	if (openResult != S_OK || codec == nullptr)
+	{
+		std::cerr << "Failed to create BRAW codec (HRESULT 0x" << std::hex << (unsigned)openResult << ")" << std::endl;
+		std::exit(1);
+	}
 #ifdef __APPLE__
 	CFStringRef c = CFStringCreateWithCString(nullptr, info->filename.c_str(), kCFStringEncodingUTF8);
-	codec->OpenClip(c, &clip);
+	openResult = codec->OpenClip(c, &clip);
 	CFRelease(c);
 #else
 	const char *c = info->filename.c_str();
-	codec->OpenClip(c, &clip);
+	openResult = codec->OpenClip(c, &clip);
 #endif
+	if (openResult != S_OK || clip == nullptr)
+	{
+		std::cerr << "Failed to open clip \"" << info->filename << "\" (HRESULT 0x" << std::hex << (unsigned)openResult << ")" << std::endl;
+		std::exit(1);
+	}
 	codec->SetCallback(&frameProcessor);
 
 	clip->GetFrameCount(&(info->frameCount));
